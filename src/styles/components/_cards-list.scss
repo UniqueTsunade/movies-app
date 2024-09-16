@@ -1,14 +1,10 @@
 .cards-list {
-    margin: 0 clamp(0.625rem, -3.036rem + 18.3vw, 13.438rem);
-    
     display: grid;
     grid-template-columns: 1fr;
     gap: 36px 37px;
-    background-color: $contentBackground;
 
     @include desktop() {
         grid-template-columns: 1fr 1fr;
-        padding: 21px clamp(0.625rem, 0.161rem + 2.32vw, 2.25rem) 21px clamp(0.625rem, 0.161rem + 2.32vw, 2.25rem); 
     }
 
     @include large-desktop() {

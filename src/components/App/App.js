@@ -1,9 +1,14 @@
 import React from "react";
 import CardsList from "../CardsList";
 
+
+
 const App = () => {
+
+    
     return (
-        <div>
+        <div className="app-container">
+            
             <CardsList />
         </div>
     )

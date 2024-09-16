@@ -64,23 +64,41 @@ select {
   font: inherit;
 }
 
+input {
+  outline: none;
+}
+
 body {
   font-family: "Inter", sans-serif;
   color: #000000;
   background-color: #F7F7F7;
 }
+input::-moz-placeholder {
+  color: rgba(0, 0, 0, 0.25);
+}
+input::placeholder {
+  color: rgba(0, 0, 0, 0.25);
+}
+
+.app-container {
+  margin: 0 clamp(1rem, -3.951rem + 19.32vw, 13.438rem);
+  background-color: inherit;
+}
+@media (min-width: 1200px) {
+  .app-container {
+    background-color: #FFFFFF;
+    padding: 21px clamp(0.625rem, 0.161rem + 2.32vw, 2.25rem) 21px clamp(0.625rem, 0.161rem + 2.32vw, 2.25rem);
+  }
+}
 
 .cards-list {
-  margin: 0 clamp(0.625rem, -3.036rem + 18.3vw, 13.438rem);
   display: grid;
   grid-template-columns: 1fr;
   gap: 36px 37px;
-  background-color: #FFFFFF;
 }
 @media (min-width: 1200px) {
   .cards-list {
     grid-template-columns: 1fr 1fr;
-    padding: 21px clamp(0.625rem, 0.161rem + 2.32vw, 2.25rem) 21px clamp(0.625rem, 0.161rem + 2.32vw, 2.25rem);
   }
 }
 @media (min-width: 1920px) {
@@ -170,4 +188,16 @@ body {
     height: 279px;
     padding: 0;
   }
+}
+
+.search-form__input {
+  position: relative;
+  width: 100%;
+  height: 40px;
+  margin-bottom: 34px;
+  border: 1px solid #D9D9D9;
+  border-radius: 4px;
+  font-size: 16px;
+  line-height: 22px;
+  padding: 8px 11px;
 }

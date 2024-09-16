@@ -1,0 +1,9 @@
+.app-container {
+    margin: 0 clamp(1rem, -3.951rem + 19.32vw, 13.438rem);
+    background-color: inherit;
+
+    @include desktop() {
+        background-color: $contentBackground;
+        padding: 21px clamp(0.625rem, 0.161rem + 2.32vw, 2.25rem) 21px clamp(0.625rem, 0.161rem + 2.32vw, 2.25rem); 
+    }
+}
