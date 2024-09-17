@@ -8,7 +8,9 @@ export function renderLoader(loading) {
 }
 
 export function renderError(error, message) {
-  return error ? <Alert message="Error" description={message} type="error" /> : null;
+  return error ? (
+    <Alert message="Error" description={message} type="error" />
+  ) : null;
 }
 
 export function renderWarning(warningMessage, handleWarning) {
@@ -31,5 +33,5 @@ export function renderWarning(warningMessage, handleWarning) {
 }
 
 export function renderContent(loading, error, moviesList) {
-  return !loading && !error ? moviesList : null;
+  return !loading && !error && moviesList.length > 0 ? moviesList : null;
 }

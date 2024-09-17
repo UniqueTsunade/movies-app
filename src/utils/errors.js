@@ -1,14 +1,19 @@
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 /* For Card.js*/
 
 //Checking to get the path to the release date
 export function handleDateError(releaseDate) {
-  if (typeof releaseDate !== "string") {
+  if (!releaseDate || typeof releaseDate !== "string") {
     return "The release date is unknown";
   }
+
   try {
-    return format(releaseDate, "MMMM dd, yyyy");
+    const parsedDate = parseISO(releaseDate);
+    if (isNaN(parsedDate)) {
+      throw new Error("Invalid date format");
+    }
+    return format(parsedDate, "MMMM dd, yyyy");
   } catch (error) {
     console.error(`Error parsing release date: ${error}`);
     return "The release date is unknown";

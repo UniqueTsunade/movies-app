@@ -2,11 +2,19 @@ export default class MoviesCollection {
   #apiBase = "https://api.themoviedb.org/3";
   #apiKey = "a0f2f3570d1fbaf0db0cd04feba6ba67";
 
-  async getResource(url, query) {
+  async getResource(url, query, page) {
     const apiUrl = `${this.#apiBase}${url}`;
-    const params = `api_key=${this.#apiKey}&query=${query}`;
+    
+    const params = new URLSearchParams({
+      api_key: this.#apiKey,
+      query: query,
+      page: page,
+    }).toString();
+    
+    const fullUrl = `${apiUrl}?${params}`;
+
     try {
-      const res = await fetch(`${apiUrl}?${params}`);
+      const res = await fetch(fullUrl);
       //Checking the success of the server response
       if (!res.ok) {
         console.error(`Could not fetch ${apiUrl}, received ${res.status}`);
@@ -24,8 +32,14 @@ export default class MoviesCollection {
       throw new Error("Failed to fetch data. Please try again later.");
     }
   }
-  async getMovies(title) {
-    const res = await this.getResource("/search/movie", title);
-    return res.results;
-  }
+
+    async getMovies(title, page = 1) {
+      const res = await this.getResource("/search/movie", title, page); 
+      console.log(res)
+      return {
+        results: res.results, //Array of films
+        totalResults: res.total_results, //Total number of results
+      };
+    }  
 }
+

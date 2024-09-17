@@ -2,64 +2,80 @@ import React, { Component } from "react";
 import Card from "../Сard";
 import MoviesCollection from "../../services/MoviesCollection";
 
-import { renderLoader, renderError, renderWarning, renderContent } from "../../utils/renderUtils";
+import {
+  renderLoader,
+  renderError,
+  renderWarning,
+  renderContent,
+} from "../../utils/renderUtils";
+import { Pagination } from "antd";
 
 import SearchForm from "../SearchForm";
 
 export default class CardsList extends Component {
+  cache = {};
 
   MoviesCollectionInstance = new MoviesCollection();
 
   state = {
     movies: [],
-    moviesList: [],
     title: "return",
     loading: false,
     error: false,
     message: "",
     warningMessage: "",
+    currentPage: 1,
+    totalMovies: 0,
   };
 
   addTitle = (searchText) => {
+    this.cache = {}; //Reset cache
     this.setState({ title: searchText }, this.updateMovies); //Update the title and call updateMovies
   };
 
   componentDidMount() {
-    this.updateMovies();
+    this.updateMovies(); //Initial movie request
   }
 
   //Movie list update
   updateMovies = async () => {
     this.setState({ loading: true, error: false, message: "" }); //Reset state
     try {
-      const movies = await this.fetchMovies();
-      this.setMovies(movies);
+      const { title, currentPage } = this.state;
+      const { results, totalResults } = await this.fetchMovies(
+        title,
+        currentPage
+      );
+      this.setMovies(results, totalResults);
     } catch (error) {
       this.handleError(error);
     }
   };
 
   //Receiving movies from the server
-  fetchMovies = async () => {
-    const title = this.state.title;
-    console.log(title);
-    const movies = await this.MoviesCollectionInstance.getMovies(title);
+  fetchMovies = async (title, page) => {
+    const cacheKey = `${title}_page_${page}`;
+
+    if (this.cache[cacheKey]) {
+      return this.cache[cacheKey];
+    }
+    const movies = await this.MoviesCollectionInstance.getMovies(title, page);
+    this.cache[cacheKey] = movies;
     return movies;
   };
 
   //Setting a new state
-  setMovies = (movies) => {
+  setMovies = (movies, totalMovies) => {
     let newWarningMessage = "";
     if (movies.length === 0 && this.state.title.trim() !== "") {
       newWarningMessage = `No films with the title "${this.state.title}" have been found. Try again.`;
-    } //Checking the title here will throw an error if there are no movies
-    const moviesList = this.processMovies(movies);
+    }
     this.setState({
       movies,
-      moviesList,
-      loading: false, //Set loading to false only after successfully receiving movies
+      loading: false,
       error: false,
       warningMessage: newWarningMessage,
+      totalMovies,
     });
   };
 
@@ -68,7 +84,7 @@ export default class CardsList extends Component {
     return movies.map((movie) => <Card key={movie.id} movie={movie} />);
   };
 
-  //Handling possible errors
+  //Handling possible warning
   handleError = (error) => {
     console.error(error);
     this.setState({
@@ -80,6 +96,7 @@ export default class CardsList extends Component {
 
   //Handling possible warning
   handleWarning = () => {
+    this.cache = {}; //Reset cache
     this.setState({ warningMessage: "" }, () => {
       //Resetting title state in SearchForm
       if (this.searchFormRef) {
@@ -89,20 +106,45 @@ export default class CardsList extends Component {
     });
   };
 
-  render() {
+  switchPage = (page) => {
+    this.setState({ currentPage: page }, this.updateMovies);
+  };
 
-    const { moviesList, loading, error, message, warningMessage } = this.state;
+  render() {
+    const {
+      movies,
+      loading,
+      error,
+      message,
+      warningMessage,
+      currentPage,
+      totalMovies,
+    } = this.state;
+    const moviesList = this.processMovies(movies);
 
     return (
       <>
-        <SearchForm addTitle={this.addTitle} ref={(ref) => (this.searchFormRef = ref)} />
-        <div className="cards-list">
-          {renderLoader(loading)}
-          {renderError(error,message)}
-          {renderWarning(warningMessage,this.handleWarning)}
-          {renderContent(loading, error, moviesList)}
+        <SearchForm
+          addTitle={this.addTitle}
+          ref={(ref) => (this.searchFormRef = ref)}
+        />
+        <div className="container">
+          <div className="cards-list">
+            {renderLoader(loading)}
+            {renderError(error, message)}
+            {renderWarning(warningMessage, this.handleWarning)}
+            {renderContent(loading, error, moviesList)}
+          </div>
+          <Pagination
+            className="pagination"
+            current={currentPage}
+            total={totalMovies}
+            pageSize={20}
+            onChange={this.switchPage}
+            showSizeChanger={false}
+          />
         </div>
       </>
-    )
+    );
   }
 }

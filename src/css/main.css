@@ -83,6 +83,7 @@ input::placeholder {
 .app-container {
   margin: 0 clamp(1rem, -3.951rem + 19.32vw, 13.438rem);
   background-color: inherit;
+  padding-bottom: 20px;
 }
 @media (min-width: 1200px) {
   .app-container {
@@ -91,19 +92,70 @@ input::placeholder {
   }
 }
 
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .cards-list {
   display: grid;
   grid-template-columns: 1fr;
+  margin-bottom: 20px;
   gap: 36px 37px;
 }
 @media (min-width: 1200px) {
   .cards-list {
     grid-template-columns: 1fr 1fr;
+    margin-bottom: 37px;
   }
 }
-@media (min-width: 1920px) {
-  .cards-list {
-    grid-template-columns: 1fr 1fr 1fr;
+
+.pagination {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  -moz-column-gap: 7px;
+       column-gap: 7px;
+  justify-content: center;
+  margin-top: auto;
+}
+.pagination .ant-pagination-item {
+  min-width: 22px;
+  height: 22px;
+  margin-inline-end: 0;
+  font-family: "Inter";
+  font-size: 12px;
+  line-height: 22px;
+}
+.pagination .ant-pagination-item a {
+  padding: 0 8px;
+  color: rgba(0, 0, 0, 0.65);
+}
+.pagination .ant-pagination-item-active {
+  background-color: #1890FF;
+  border-radius: 4px;
+  border: none;
+}
+.pagination .ant-pagination-item-active a {
+  padding: 0 8px;
+  color: #FFFFFF;
+}
+.pagination .ant-pagination-item-active a:hover {
+  color: #FFFFFF;
+}
+.pagination .ant-pagination-prev {
+  margin: 0;
+}
+.pagination .ant-pagination-jump-next {
+  margin-right: 0;
+}
+.pagination .ant-pagination-disabled .anticon {
+  color: rgba(0, 0, 0, 0.25);
+}
+@media (min-width: 1200px) {
+  .pagination {
+    padding-bottom: 0;
   }
 }
 
