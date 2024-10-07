@@ -72,6 +72,7 @@ body {
   font-family: "Inter", sans-serif;
   color: #000000;
   background-color: #F7F7F7;
+  overflow-x: hidden;
 }
 input::-moz-placeholder {
   color: rgba(0, 0, 0, 0.25);
@@ -100,6 +101,7 @@ input::placeholder {
 
 .cards-list {
   display: grid;
+  justify-items: center;
   grid-template-columns: 1fr;
   margin-bottom: 20px;
   gap: 36px 37px;
@@ -160,19 +162,29 @@ input::placeholder {
 }
 
 .card {
-  width: 100%;
+  width: 388px;
   height: 245px;
+  overflow: hidden;
   display: grid;
   grid-template-columns: 23% 77%;
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 46px;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
   padding: 4px 10px;
+}
+.card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  -moz-column-gap: 2px;
+       column-gap: 2px;
 }
 .card__poster {
   height: 90px;
   width: 100%;
   -o-object-fit: cover;
      object-fit: cover;
+  -o-object-position: center;
+     object-position: center;
 }
 @media (min-width: 1200px) {
   .card__poster {
@@ -200,9 +212,8 @@ input::placeholder {
   color: #827E7E;
 }
 .card__overview {
-  grid-column: 1;
+  grid-column: 1/-1;
   grid-row: 2;
-  padding-bottom: 49px;
   font-size: 12px;
   line-height: 22px;
   padding-right: 11px;
@@ -210,7 +221,7 @@ input::placeholder {
 @media (min-width: 1200px) {
   .card__overview {
     grid-column: 2;
-    grid-row: 2;
+    grid-row: 1;
   }
 }
 .card__genres-list {
@@ -232,11 +243,38 @@ input::placeholder {
     margin-bottom: 7px;
   }
 }
+.card .card__rating {
+  padding: 13px 0 18px 4px;
+  text-align: center;
+  grid-column: 2;
+  grid-row: 3;
+}
+.card .ant-rate-star {
+  margin-right: 7px;
+}
+.card .ant-rate-star .anticon-star {
+  width: 15px;
+  height: 15px;
+}
+.card__app-rating {
+  min-width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 6px;
+}
+.card__app-rating p {
+  font-size: 12px;
+  line-height: 22px;
+}
 @media (min-width: 1200px) {
   .card {
     display: grid;
     grid-template-columns: 40.5% 59.5%;
     grid-template-rows: 1fr;
+    width: 451px;
     height: 279px;
     padding: 0;
   }

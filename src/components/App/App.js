@@ -8,7 +8,6 @@ const App = () => {
     
     return (
         <div className="app-container">
-            
             <CardsList />
         </div>
     )

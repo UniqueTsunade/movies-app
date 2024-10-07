@@ -6,6 +6,7 @@
 
 .cards-list {
     display: grid;
+    justify-items: center;
     grid-template-columns: 1fr;
     margin-bottom: 20px;
     gap: 36px 37px;

@@ -32,3 +32,12 @@ export function handlePosterError(imagePath) {
     return null;
   }
 }
+
+
+//Checking to get the path to the vote average
+export function handleVoteAverage(voteAverage) {
+  if (typeof voteAverage !== "number" || isNaN(voteAverage) || voteAverage === 0) {
+    return 0;
+  }
+    return voteAverage.toFixed(1);
+}
