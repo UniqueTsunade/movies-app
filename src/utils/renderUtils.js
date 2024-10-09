@@ -16,7 +16,7 @@ export function renderError(error, message) {
 export function renderWarning(warningMessage, handleWarning) {
   return warningMessage ? (
     <Alert
-      message="Info Text"
+      message="Info message"
       description={warningMessage}
       type="info"
       action={

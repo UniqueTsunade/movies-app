@@ -31,7 +31,7 @@ export default class CardsList extends Component {
     activeTab: "1", 
     movies: [], 
     displayedMovies: [],
-    title: "naruto",
+    title: "return",
     totalMovies: 0,
     totalPages: 0,
     pageSize: 6, 
@@ -146,6 +146,10 @@ export default class CardsList extends Component {
   setMovies = (movies) => {
     const { pageSize } = this.state; 
     const totalPages = Math.ceil(movies.length / pageSize);
+    let newWarningMessage = "";
+    if (movies.length === 0 && this.state.title.trim() !== "") {
+      newWarningMessage = `No films with the title "${this.state.title}" have been found. Try again.`;
+    }
 
     this.setState(
       {
@@ -153,6 +157,7 @@ export default class CardsList extends Component {
         totalMovies: movies.length, 
         totalPages,
         loading: false,
+        warningMessage: newWarningMessage,
         error: false,
       },
       this.updateDisplayedMovies 
@@ -391,7 +396,7 @@ export default class CardsList extends Component {
             <div className="cards-list">
               {renderLoader(loading)}
               {renderError(error, message)}
-              {renderWarning(warningMessage, this.handleWarning)}
+              {activeTab === "1" && renderWarning(warningMessage, this.handleWarning)}
               {renderRatedTabMessage(ratedTabMessage)}
               {renderContent(loading, error, moviesList)}
             </div>
