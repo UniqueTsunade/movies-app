@@ -32,6 +32,10 @@ export function renderWarning(warningMessage, handleWarning) {
   ) : null;
 }
 
+export function renderRatedTabMessage(ratedTabMessage) {
+  return ratedTabMessage ? <Alert message={ratedTabMessage} type="info" showIcon /> : null;
+}
+
 export function renderContent(loading, error, moviesList) {
   return !loading && !error && moviesList.length > 0 ? moviesList : null;
 }

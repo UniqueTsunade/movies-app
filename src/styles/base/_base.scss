@@ -2,10 +2,24 @@
 
 body {
     font-family: "Inter", sans-serif;
-    color: $textColor;
-    background-color: $bodyBackground;
+    font-size: 12px;
+    line-height: 22px;
+    color: $textColor;   
+    background-color: $contentBackground;
     overflow-x: hidden;
+
+
+    @include desktop() {
+        background-color: $bodyBackground;
+    }
 }
+
+.container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
 
 
 input {

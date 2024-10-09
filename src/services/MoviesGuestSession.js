@@ -16,13 +16,22 @@ export default class MoviesGuestSession {
               'Content-Type': 'application/json',
             },
           });
+          //Check response status
           if (!res.ok) {
-            console.error(`Could not create guest session, received ${res.status}`);
-            throw new Error(`HTTP error! status: ${res.status}`);
+            const errorMessage = `Could not create guest session, received status: ${res.status}`;
+            console.error(errorMessage);
+            throw new Error(errorMessage);
           }
           return await res.json();
         } catch (error) {
-          console.error("Fetch error:", error);
+          //Handling Network Errors
+          if (error instanceof TypeError) {
+            throw new Error(
+              "No internet connection or failed to connect to the server. Please check your network settings."
+            );
+          }
+          //Log other errors
+          console.error("Network or fetch error: ", error);
           throw new Error("Failed to create guest session. Please try again later.");
         }
       }

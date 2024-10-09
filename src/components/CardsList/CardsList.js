@@ -5,10 +5,12 @@ import Card from "../Сard";
 import MoviesCollection from "../../services/MoviesCollection";
 import MoviesGuestSession from "../../services/MoviesGuestSession";
 
+import { cutMoviesDisplay, getMoviesForRatedTab, getMoviesForSwitcher } from '../../utils/helpers';
 import {
   renderLoader,
   renderError,
   renderWarning,
+  renderRatedTabMessage,
   renderContent,
 } from "../../utils/renderUtils";
 import { Pagination } from "antd";
@@ -19,38 +21,29 @@ import TopTabs from "../TopTabs";
 import MovieContext from "../../utils/MovieContext";
 
 export default class CardsList extends Component {
-  count = 0;
   cache = {};
 
   MoviesCollectionInstance = new MoviesCollection();
   GuestSession = new MoviesGuestSession();
 
   state = {
-    /* Для комопонента pagination */
     currentPage: 1,
-
-    /* Для отображения метода getMovies */
-    remainingMovies: [], // Для хранения оставшихся фильмов
-    movies: [], // Фильмы полученные с сервера
-    allMovies: [], // Все полученные фильмы
+    activeTab: "1", 
+    movies: [], 
     displayedMovies: [],
     title: "naruto",
     totalMovies: 0,
     totalPages: 0,
-    pageSize: 6, // или любое другое значение по умолчанию
-    requestedPage: 1,
-
-    /* Визуальные приколы */
+    pageSize: 6, 
     loading: false,
     error: false,
     message: "",
     warningMessage: "",
-
-    /* Отображение жанров и рейтингов */
-    sessionId: null, // Новое свойство для хранения гостевого ID
-    ratings: {}, // Храним рейтинги
+    ratedTabMessage: "",
+    sessionId: null, 
+    ratings: {}, 
     genresList: [],
-    ratedMovies: [], // Состояние для оцененных фильмов
+    ratedMovies: [], 
   };
 
   addTitle = (searchText) => {
@@ -58,283 +51,271 @@ export default class CardsList extends Component {
     this.setState({ title: searchText }, this.updateMovies); //Update the title and call updateMovies
   };
 
-  // componentDidMount() {
-  //   this.updateMovies(); //Initial movie request
-  // }
-
   async componentDidMount() {
     try {
-      const sessionId = await this.GuestSession.createGuestSession();
-      this.setState({ sessionId: sessionId.guest_session_id });
-      await this.updateMovies(); // Инициализация запроса к фильмам
+      //Setting the loading state before the request
+      this.setState({ loading: true });
+      //Running a request to create a guest session
+      const { guest_session_id } = await this.GuestSession.createGuestSession();
+      //Update the state and call the movie update
+      this.setState({
+        sessionId: guest_session_id,
+        loading: false, //Remove the loading indicator after receiving the sessionId
+      });
+      //Updating movies after setting sessionId
+      await this.updateMovies();
     } catch (error) {
-      console.error("Ошибка при создании сессии:", error);
+      console.error("Error creating session:", error);
+      this.handleError(error); //Calling the error handler
+      this.setState({
+        loading: false,
+      });
     }
   }
 
   fetchMovies = async (title) => {
-    const sessionId = await this.GuestSession.createGuestSession();
-    const genresList = await this.MoviesCollectionInstance.getGenresMovies();
-
-    this.setState({
-      sessionId: sessionId.guest_session_id,
-      genresList: genresList,
-    });
-
-    let allMovies = [];
-    let totalPages = 0;
-
-    // Начнем с первой страницы
-    let currentPage = 1;
-    do {
-      const movies = await this.MoviesCollectionInstance.getMovies(
-        title,
-        currentPage,
-        sessionId.guest_session_id
-      );
-      allMovies = [...allMovies, ...movies.results]; // Сохраняем все фильмы
-      totalPages = movies.totalPages; // Получаем общее количество страниц
-      currentPage++;
-    } while (currentPage <= totalPages);
-
-    return {
+    const { sessionId } = this.state;
+    //Checking the cache
+    if (this.cache[title]) {
+      return this.cache[title];
+    }
+    //Retrieving genres and updating state
+    await this.loadGenres();
+    //Getting all movies
+    const allMovies = await this.getAllMovies(title, sessionId);
+    //Forming the result
+    const result = {
       results: allMovies,
-      totalResults: allMovies.length,
-      totalPages: totalPages,
     };
-    
+    //Save to cache
+    this.cache[title] = result;
+    return result;
   };
 
-
-  setMovies = (movies, totalMovies, totalPages) => {
-    // Обновляем состояние
-    this.setState(
-      {
-        allMovies: movies,
-        totalMovies,
-        totalPages,
-        loading: false,
-        error: false,
-      },
-      this.updateDisplayedMovies
-    );
+  //Loading genres from the server
+  loadGenres = async () => {
+    const genresList = await this.MoviesCollectionInstance.getGenresMovies();
+    this.setState({ genresList });
   };
 
-  updateDisplayedMovies = () => {
-    const { currentPage, pageSize, allMovies } = this.state;
-    const startIndex = (currentPage - 1) * pageSize;
-    const displayedMovies = allMovies.slice(startIndex, startIndex + pageSize);
+  //Getting all movie pages
+  getAllMovies = async (title, sessionId) => {
+    let allMovies = [];
+    let currentPage = 1;
+    let totalPages;
 
-    this.setState({ movies: displayedMovies });
-    console.log(`Счетчик: ${this.count++}`)
+    try {
+      do {
+        const { results, totalPages: pages, totalResults } =
+          await this.MoviesCollectionInstance.getMovies(
+            title,
+            currentPage,
+            sessionId
+          );
+  
+        allMovies = [...allMovies, ...results];
+        totalPages = pages;
+        currentPage++;
+        console.log(totalResults)
+      } while (currentPage <= totalPages);
+  
+      // Return all movies
+      return allMovies;
+    } catch (error) {
+      this.handleError(error); 
+    }
   };
 
   updateMovies = async () => {
-    this.setState({ loading: true, error: false, message: "" });
+    this.setState({
+      loading: true,
+      error: false,
+      message: "",
+      errorMessage: "",
+    });
     try {
       const { title } = this.state;
-
-      // Загружаем все фильмы
-      const { results, totalResults, totalPages } = await this.fetchMovies(
-        title
-      );
-
-      // Сохраним результаты
-      this.setMovies(results, totalResults, totalPages);
+      const { results } = await this.fetchMovies(title);
+      this.setMovies(results);
     } catch (error) {
       this.handleError(error);
     }
   };
 
+
+  setMovies = (movies) => {
+    const { pageSize } = this.state; 
+    const totalPages = Math.ceil(movies.length / pageSize);
+
+    this.setState(
+      {
+        movies,
+        totalMovies: movies.length, 
+        totalPages,
+        loading: false,
+        error: false,
+      },
+      this.updateDisplayedMovies 
+    );
+  };
+
+
+  updateDisplayedMovies = () => {
+    const { currentPage, pageSize, movies, ratings, activeTab } = this.state;
+    let displayedMovies = cutMoviesDisplay(currentPage, pageSize, movies);
+    if (activeTab === "2") {
+      const ratedMovies = getMoviesForRatedTab(movies, ratings);
+      displayedMovies = cutMoviesDisplay(ratedMovies, currentPage, pageSize);
+    }
+    //Update the state with the displayed films
+    this.setState({ displayedMovies });
+  };
+
   processMovies = (movies) => {
-    const { ratings } = this.state; // Получаем рейтинги из состояния
+    const { ratings } = this.state;
 
     return movies.map((movie) => (
       <Card
         key={movie.id}
         movie={movie}
-        currentRating={ratings[movie.id] || 0} // Передавайте только текущий рейтинг
+        currentRating={ratings[movie.id] || 0}
       />
     ));
   };
 
-  // rateMovies = async (movieId, rating) => {
-  //   this.setState({ loading: true });
+  rateMovies = async (movie, rating) => {
+    this.setState({ loading: true });
 
-  //   try {
-  //     const sessionId = this.state.sessionId;
-  //     const rateMoviesResponse = await this.MoviesCollectionInstance.rateMovies(
-  //       movieId,
-  //       rating,
-  //       sessionId
-  //     );
+    //Update status for rated films and ratings
+    this.updateRatingsState(movie, rating);
 
-  //     // Обновляем состояние сразу после успешной оценки
-  //     this.setState((prevState) => ({
-  //       ratings: { ...prevState.ratings, [movieId]: rating },
-  //       isRated: true,
-  //     }));
-
-  //     return rateMoviesResponse;
-  //   } catch (error) {
-  //     console.error("Error in rateMovies implementation:", error);
-  //   } finally {
-  //     this.setState({ loading: false });
-  //   }
-  // };
-
-
-//   rateMovies = async (movieId, rating) => {
-//     this.setState({ loading: true });
-
-//     try {
-//         const sessionId = this.state.sessionId;
-//         const rateMoviesResponse = await this.MoviesCollectionInstance.rateMovies(
-//             movieId,
-//             rating,
-//             sessionId
-//         );
-
-//         // Обновляем состояние сразу после успешной оценки
-//         this.setState((prevState) => {
-//             // Добавляем новый оцененный фильм в ratedMovies
-//             const updatedRatedMovies = [...prevState.ratedMovies, { ...movieData, rating }];
-
-//             return {
-//                 ratings: { ...prevState.ratings, [movieId]: rating },
-//                 ratedMovies: updatedRatedMovies,
-//                 isRated: true,
-//             };
-//         });
-
-        
-//         return rateMoviesResponse;
-//     } catch (error) {
-//         console.error("Error in rateMovies implementation:", error);
-//     } finally {
-//         this.setState({ loading: false });
-//     }
-// };
-
-// rateMovies = async (movie, rating) => {
-//   this.setState({ loading: true });
-
-//   try {
-//       const sessionId = this.state.sessionId;
-//       const rateMoviesResponse = await this.MoviesCollectionInstance.rateMovies(
-//           movie.id,
-//           rating,
-//           sessionId
-//       );
-
-//       // Обновляем состояние сразу после успешной оценки
-//       this.setState((prevState) => {
-//           // Добавляем новый оцененный фильм в ratedMovies
-//           const updatedRatedMovies = [
-//               ...prevState.ratedMovies,
-//               { ...movie, rating } // Сохраняем весь объект фильма вместе с рейтингом
-//           ];
-
-//           return {
-//               ratings: { ...prevState.ratings, [movie.id]: rating },
-//               ratedMovies: updatedRatedMovies,
-//               isRated: true,
-//           };
-//       });
-
-//       return rateMoviesResponse;
-//   } catch (error) {
-//       console.error("Error in rateMovies implementation:", error);
-//   } finally {
-//       this.setState({ loading: false });
-//   }
-// };
-
-/*Верный вариант*/
-rateMovies = async (movie, rating) => {
-  this.setState({ loading: true });
-
-  try {
-      const sessionId = this.state.sessionId;
-      await this.MoviesCollectionInstance.rateMovies(movie.id, rating, sessionId);
-
-      // Обновляем состояние сразу после успешной оценки
-      this.setState((prevState) => {
-          // Проверяем, существует ли фильм в ratedMovies
-          const existingMovieIndex = prevState.ratedMovies.findIndex(ratedMovie => ratedMovie.id === movie.id);
-
-          let updatedRatedMovies;
-
-          if (existingMovieIndex !== -1) {
-              // Если фильм существует, обновляем его рейтинг
-              updatedRatedMovies = [...prevState.ratedMovies];
-              updatedRatedMovies[existingMovieIndex] = { ...updatedRatedMovies[existingMovieIndex], rating };
-          } else {
-              // Если фильм не существует, добавляем его в массив
-              updatedRatedMovies = [
-                  ...prevState.ratedMovies,
-                  { ...movie, rating }
-              ];
-          }
-
-          return {
-              ratings: { ...prevState.ratings, [movie.id]: rating },
-              ratedMovies: updatedRatedMovies,
-              isRated: true,
-          };
-      });
-  } catch (error) {
+    //Asynchronously send data to the server and update the display
+    try {
+      await this.submitRatingToServer(movie, rating);
+      await this.refreshDisplayedMovies();
+    } catch (error) {
       console.error("Error in rateMovies implementation:", error);
-  } finally {
+    } finally {
+      //Disable the loader after completing all operations
       this.setState({ loading: false });
-  }
+    }
+  };
+
+  updateRatingsState = (movie, rating) => {
+    this.setState((prevState) => {
+      const updatedRatedMovies = { ...prevState.ratedMovies };
+
+      if (rating === 0) {
+        //If the rating is 0, we remove the film from the list of rated ones
+        delete updatedRatedMovies[movie.id];
+      } else {
+        //If the rating is more than 0, update or add the film
+        updatedRatedMovies[movie.id] = { ...movie, rating };
+      }
+
+      return {
+        ratings: { ...prevState.ratings, [movie.id]: rating }, // Update the rating
+        ratedMovies: updatedRatedMovies, //Update rated films
+        isRated: true,
+      };
+    });
+  };
+
+  submitRatingToServer = async (movie, rating) => {
+    const sessionId = this.state.sessionId;
+    try {
+      await this.MoviesCollectionInstance.rateMovies(
+        movie.id,
+        rating,
+        sessionId
+      );
+      //Successful sending of data, clearing cache for rated movies
+      delete this.cache["ratedMovies"];
+    } catch (error) {
+      this.handleError(error);
+      console.error("Error in rateMovies implementation:", error);
+    }
+  };
+
+  refreshDisplayedMovies = async () => {
+    if (this.state.activeTab === "2") {
+      await this.handleTabChange("2");
+    } else {
+      this.updateDisplayedMovies();
+    }
+  };
+
+  handleTabChange = async (key) => {
+    this.setState({ activeTab: key, loading: true });
+
+    const { sessionId, pageSize, ratedMovies } = this.state;
+
+    if (key === "2") {
+        //If there are already rated films available, we display them immediately
+        if (ratedMovies.length > 0) {
+            this.setState({
+                displayedMovies: ratedMovies.slice(0, pageSize),
+                totalMovies: ratedMovies.length,
+                totalPages: Math.ceil(ratedMovies.length / pageSize),
+                currentPage: 1,
+                loading: false,
+                ratedTabMessage: "",
+            });
+        }
+        //Launch a request to receive rated films
+        await this.fetchRatedMovies(sessionId); 
+    } else if (key === "1") {
+        //If we switch to the first tab, we display regular movies
+        const { movies } = this.state;
+        this.setState({
+            displayedMovies: movies.slice(0, pageSize),
+            totalMovies: movies.length,
+            totalPages: Math.ceil(movies.length / pageSize),
+            currentPage: 1,
+            loading: false,
+            ratedTabMessage: "",
+        });
+    }
 };
 
 
-  handleTabChange = async (key) => {
-    this.setState({ loading: true });
-    const sessionId = this.state.sessionId;
+  fetchRatedMovies = async (sessionId) => {
+    try {
+      const updatedRatedMovies =
+        await this.MoviesCollectionInstance.getRatedMovies(sessionId);
 
-    // Проверка sessionId
-    if (!sessionId) {
-      console.error("Guest session ID не найден.");
-      this.setState({ loading: false });
-      return;
-    }
-
-    if (key === "2") {
-      // Проверяем, есть ли уже оцененные фильмы в состоянии
-      if (this.state.ratedMovies.length === 0) {
-        try {
-          const ratedMovies = await this.MoviesCollectionInstance.getRatedMovies(sessionId);
-        
-          this.setState({
-            ratedMovies, // Сохраняем оцененные фильмы в отдельное состояние
-            movies: ratedMovies,
-            totalMovies: ratedMovies.length,
-          });
-        } catch (error) {
-          if (error.response && error.response.status === 404) {
-            console.error("Ошибка 404: Неправильный guest_session_id или отсутствуют оцененные фильмы.");
-          } else {
-            console.error("Ошибка получения оцененных фильмов:", error);
-          }
-          this.setState({ movies: [], totalMovies: 0 });
-        }
-      } else {
-        // Если оцененные фильмы уже загружены, просто устанавливаем их
+      if (!updatedRatedMovies || updatedRatedMovies.length === 0) {
         this.setState({
-          movies: this.state.ratedMovies,
-          totalMovies: this.state.ratedMovies.length,
+          displayedMovies: [],
+          totalMovies: 0,
+          totalPages: 0,
+          loading: false,
+          ratedTabMessage: "You haven't rated any films yet",
+        });
+      } else {
+        this.setState({
+          ratedMovies: updatedRatedMovies, //Update the list of rated films
+          displayedMovies: updatedRatedMovies.slice(0, this.state.pageSize), //Updating the displayed movies
+          totalMovies: updatedRatedMovies.length,
+          totalPages: Math.ceil(
+            updatedRatedMovies.length / this.state.pageSize
+          ),
+          currentPage: 1,
+          loading: false,
+          ratedTabMessage: "", 
         });
       }
-    } else if (key === "1") {
-      await this.updateMovies();
+    } catch (error) {
+      this.handleError(error)
+      console.error("Error fetching rated movies:", error);
+      this.setState({
+        loading: false,
+        message: "An error occurred while retrieving rated movies.",
+      });
+    } finally {
+      this.setState({ loading: false });
     }
-
-    this.setState({ loading: false });
   };
-
 
   //Handling possible warning
   handleError = (error) => {
@@ -358,15 +339,27 @@ rateMovies = async (movie, rating) => {
     });
   };
 
-  switchPage = (page) => {
-    this.setState({ currentPage: page }, this.updateDisplayedMovies);
 
+  switchPage = (page) => {
+    const { pageSize, movies, ratings } = this.state;
+    const startIndex = (page - 1) * pageSize;
+
+    const displayedMovies = this.state.activeTab === "2" 
+    ? getMoviesForSwitcher(movies, ratings)
+    : movies;
+
+    this.setState({
+      displayedMovies: displayedMovies.slice(startIndex, startIndex + pageSize),
+      currentPage: page,
+    });
   };
+  
 
   render() {
     const {
-      movies,
-      allMovies,
+      activeTab,
+      displayedMovies,
+      ratedTabMessage,
       loading,
       error,
       message,
@@ -374,29 +367,32 @@ rateMovies = async (movie, rating) => {
       currentPage,
       totalMovies,
     } = this.state;
-    const moviesList = this.processMovies(movies);
-    console.log(this.state.ratedMovies);
+
+    const moviesList = this.processMovies(displayedMovies); 
    
 
     return (
       <MovieContext.Provider
         value={{
-          rateMovies: this.rateMovies, // Передаем метод в контекст
-          ratings: this.state.ratings, // Можем передать все рейтинги
+          rateMovies: this.rateMovies, 
+          ratings: this.state.ratings, 
           genresList: this.state.genresList,
         }}
       >
         <>
           <TopTabs handleTabChange={this.handleTabChange} />
-          <SearchForm
-            addTitle={this.addTitle}
-            ref={(ref) => (this.searchFormRef = ref)}
-          />
+          {activeTab === "1" && (
+            <SearchForm
+              addTitle={this.addTitle}
+              ref={(ref) => (this.searchFormRef = ref)}
+            />
+          )}
           <div className="container">
             <div className="cards-list">
               {renderLoader(loading)}
               {renderError(error, message)}
               {renderWarning(warningMessage, this.handleWarning)}
+              {renderRatedTabMessage(ratedTabMessage)}
               {renderContent(loading, error, moviesList)}
             </div>
             <Pagination

@@ -1,8 +1,25 @@
-$contentBackground: #FFFFFF;
-$bodyBackground: #F7F7F7;
-$textColor: #000000;
-$dateColor: #827E7E;
+//Colors
+$white: #FFFFFF;
+$seasalt: #F7F7F7;
+$black: #000000;
+$gray: #827E7E;
+$dodgerBlue:#1890FF;
+$platinum:#D9D9D9;
+
+//Background
+$contentBackground: $white;
+$bodyBackground: $seasalt;
+
+//Text element colors
+$textColor: $black;
+$dateColor: $gray;
+$numberPagination: $white;
+
+//UI element colors
+$activePaginationBtn: $dodgerBlue;
+$genresBorder: $platinum;
+$searchFormBorder: $platinum;
 
 
-$uiGray: #D9D9D9;
+
 

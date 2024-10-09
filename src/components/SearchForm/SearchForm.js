@@ -31,7 +31,7 @@ export default class SearchForm extends Component {
   render() {
 
     return (
-      <form onSubmit={(e) => {
+      <form className="search-form" onSubmit={(e) => {
         e.preventDefault(); 
         this.resetTitle(); 
       }}>

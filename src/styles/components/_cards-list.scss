@@ -1,19 +1,44 @@
-.container {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
 .cards-list {
     display: grid;
     justify-items: center;
     grid-template-columns: 1fr;
     margin-bottom: 20px;
-    gap: 36px 37px;
+    row-gap: 20px;
+  
 
     @include desktop() {
         grid-template-columns: 1fr 1fr;
-        margin-bottom: 37px;
+        gap: 34px 36px;
+        margin-bottom: 36px;
+
+
+        > *:nth-child(odd) {
+            justify-self: start;
+          }
+          
+        > *:nth-child(even) {
+            justify-self: end;
+          }
+    }
+
+    @include large-desktop() {
+        grid-template-columns: 1fr 1fr 1fr;
+        align-items: center;
+ 
+        > *:nth-child(3n+1) {
+            grid-column: 1;
+            justify-self: start;
+          }
+          
+          > *:nth-child(3n+2) {
+            grid-column: 2;
+            justify-self: center;
+          }
+          
+          > *:nth-child(3n+3) {
+            grid-column: 3;
+            justify-self: end;
+          }
     }
 
 }
@@ -40,16 +65,16 @@
         }
 
         &-active {
-            background-color: #1890FF;
+            background-color: $activePaginationBtn;
             border-radius: 4px;
             border: none;
 
             a {
                 padding: 0 8px;
-                color: #FFFFFF;
+                color: $numberPagination;
 
                 &:hover {
-                    color: #FFFFFF;
+                    color: $numberPagination;
                 }
             }
         }

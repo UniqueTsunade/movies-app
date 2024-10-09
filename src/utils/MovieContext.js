@@ -1,9 +1,7 @@
-import React, { createContext } from "react";
-
-// const MovieContext = createContext();
+import { createContext } from "react";
 
 const MovieContext = createContext({
-    rateMovies: () => {}, // Default function for safety
+    rateMovies: () => {},
     currentRating: 0,
   });
 

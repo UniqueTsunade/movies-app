@@ -60,95 +60,61 @@ export default class MoviesCollection {
       }),
     };
 
-    const res = await fetch(url, options);
-    if (!res.ok) {
-      console.error(`Could not fetch ${baseUrl}, received ${res.status}`);
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-    const data = await res.json();
-    return data;
-  }
-
-  // async getRatedMovies(page = 1, sessionId) {
-  //   const url = `${
-  //     this.#apiBase
-  //   }/guest_session/${sessionId}/rated/movies?api_key=${
-  //     this.#apiKey
-  //   }&page=${page}`;
-
-  //   try {
-  //     const response = await fetch(url);
-
-  //     if (!response.ok) {
-  //       throw new Error(`HTTP error! status: ${response.status}`);
-  //     }
-
-  //     const data = await response.json();
-
-  //     if (!data || !data.results) {
-  //       console.warn("No rated movies found for this session.");
-  //       return []; // Return an empty array if no results found
-  //     }
-
-  //     return data.results;
-  //   } catch (error) {
-  //     console.error("Error fetching rated movies:", error);
-  //     // Handle the error here, e.g., display an error message to user
-  //   }
-  // }
-
-  async getRatedMovies( sessionId) {
-    const url = `${
-      this.#apiBase
-    }/guest_session/${sessionId}/rated/movies?api_key=${
-      this.#apiKey
-    }`;
-
     try {
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      if(!sessionId) {
-        console.log(`нет id гостевой сессии`)
-      }
-
-      const data = await response.json();
-
-      if (!data || !data.results) {
-        console.warn("No rated movies found for this session.");
-        return []; // Return an empty array if no results found
-      }
-
-      return data.results;
-    } catch (error) {
-      console.error("Error fetching rated movies:", error);
-      // Handle the error here, e.g., display an error message to user
-    }
-  }
-
-  async getGenresMovies() {
-    const url = `${this.#apiBase}/genre/movie/list?api_key=${this.#apiKey}`;
-
-    try {
-      const res = await fetch(url);
-
+      const res = await fetch(url, options);
       if (!res.ok) {
-        console.error(`Could not fetch ${url}, received ${res.status}`);
+        console.error(`Could not fetch ${baseUrl}, received ${res.status}`);
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-      return await res.json();
+      const data = await res.json();
+      return data;
     } catch (error) {
-      //Handling fetch errors
-      console.error("Fetch error:", error);
+       //Handling Network Errors
       if (error instanceof TypeError) {
         throw new Error(
           "No internet connection or failed to connect to the server. Please check your network settings."
         );
       }
-      throw new Error("Failed to fetch data. Please try again later.");
+        //Log other errors
+        console.error("An error occurred: ", error);
+        throw new Error("Failed to rate the movie. Please try again later.");
     }
   }
+
+  async getRatedMovies(sessionId) {
+    const url = `/guest_session/${sessionId}/rated/movies`; 
+    const params = { api_key: this.#apiKey }; 
+
+    try {
+        const data = await this.getResource(url, params); 
+
+        if (!data || !data.results) {
+            console.warn("No rated movies found for this session.");
+            return []; 
+        }
+
+        console.log("Метод getRatedMovies был вызван")  
+        return data.results; 
+    } catch (error) {
+        if (error instanceof TypeError) {
+            throw new Error(
+                "No internet connection or failed to connect to the server. Please check your network settings."
+            );
+        }
+        console.error("Error fetching rated movies:", error);
+        return []; 
+    }
+}
+
+
+  async getGenresMovies() {
+    const url = "/genre/movie/list"; 
+    try {
+        const data = await this.getResource(url);
+        return data; 
+    } catch (error) {
+        console.error("Error getting movie genres:", error);
+        throw new Error("Failed to get movie genres. Please try again later.");
+    }
+}
 }
