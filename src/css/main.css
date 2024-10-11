@@ -86,6 +86,7 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
 }
 input::-moz-placeholder {
   color: rgba(0, 0, 0, 0.25);
@@ -95,6 +96,10 @@ input::placeholder {
 }
 
 .app-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   margin: 0 auto;
   padding-bottom: 20px;
   background-color: inherit;
@@ -152,13 +157,13 @@ input::placeholder {
 }
 
 .pagination {
+  margin-top: auto;
   height: 24px;
   display: flex;
-  align-items: center;
+  align-items: end;
   -moz-column-gap: 7px;
        column-gap: 7px;
   justify-content: center;
-  margin-top: auto;
 }
 .pagination .ant-pagination-item {
   min-width: 22px;
@@ -369,4 +374,27 @@ input::placeholder {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.error-boundary {
+  display: flex;
+  flex-direction: column;
+  row-gap: 40px;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+}
+.error-boundary button {
+  width: -moz-max-content;
+  width: max-content;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 10px;
+  color: white;
+  transition: 0.2s linear;
+  background: #1890FF;
+  font-size: 16px;
+}
+.error-boundary button:hover {
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #00488C;
 }

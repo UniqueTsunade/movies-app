@@ -365,6 +365,7 @@ export default class CardsList extends Component {
       activeTab,
       displayedMovies,
       ratedTabMessage,
+      pageSize,
       loading,
       error,
       message,
@@ -404,7 +405,7 @@ export default class CardsList extends Component {
               className="pagination"
               current={currentPage}
               total={totalMovies}
-              pageSize={6}
+              pageSize={pageSize}
               onChange={this.switchPage}
               showSizeChanger={false}
             />

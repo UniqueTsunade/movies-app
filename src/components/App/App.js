@@ -1,10 +1,14 @@
 import React from "react";
 import CardsList from "../CardsList";
 
+import ErrorBoundary from "../../utils/ErrorBoundary";
+
 const App = () => {
   return (
     <div className="app-container">
-      <CardsList />
+      <ErrorBoundary>
+        <CardsList />
+      </ErrorBoundary>
     </div>
   );
 };

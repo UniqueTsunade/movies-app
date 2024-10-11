@@ -3,14 +3,12 @@
     justify-items: center;
     grid-template-columns: 1fr;
     margin-bottom: 20px;
-    row-gap: 20px;
-  
+    row-gap: 20px; 
 
     @include desktop() {
         grid-template-columns: 1fr 1fr;
         gap: 34px 36px;
         margin-bottom: 36px;
-
 
         > *:nth-child(odd) {
             justify-self: start;
@@ -44,12 +42,13 @@
 }
 
 .pagination {
+    margin-top: auto; 
     height: 24px;
     display: flex;
-    align-items: center;
+    align-items: end;
     column-gap: 7px;
     justify-content: center;
-    margin-top: auto;
+
 
     .ant-pagination-item {
         min-width: 22px;
